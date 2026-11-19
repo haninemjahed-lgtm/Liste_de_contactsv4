@@ -1,58 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F6F7FB">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
         <ImageView
             android:id="@+id/ivPhoto"
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:layout_gravity="center_horizontal"
-            android:scaleType="centerCrop" />
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_menu_myplaces"
+            android:scaleType="centerCrop"
+            android:contentDescription="Photo du contact" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button android:id="@+id/btnGalerie" android:layout_width="0dp"
-                android:layout_height="wrap_content" android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="12dp">
+
+            <Button
+                android:id="@+id/btnGalerie"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Galerie" />
-            <Button android:id="@+id/btnCamera" android:layout_width="0dp"
-                android:layout_height="wrap_content" android:layout_weight="1"
+
+            <Button
+                android:id="@+id/btnCamera"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Caméra" />
+
         </LinearLayout>
 
-        <EditText android:id="@+id/etNom" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Nom" android:inputType="textPersonName" />
-        <EditText android:id="@+id/etPrenom" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Prénom" android:inputType="textPersonName" />
-        <EditText android:id="@+id/etTel" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Téléphone" android:inputType="phone" />
-        <EditText android:id="@+id/etEmail" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="E-mail"
+        <Button
+            android:id="@+id/btnFavori"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="☆ Favori"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/etNom"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Nom *"
+            android:inputType="textCapWords"
+            android:layout_marginTop="12dp" />
+
+        <EditText
+            android:id="@+id/etPrenom"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Prénom *"
+            android:inputType="textCapWords" />
+
+        <EditText
+            android:id="@+id/etTelephone"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Téléphone *"
+            android:inputType="phone" />
+
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="E-mail"
             android:inputType="textEmailAddress" />
-        <EditText android:id="@+id/etLat" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Latitude (-90 à 90)"
-            android:inputType="numberDecimal|numberSigned" />
-        <EditText android:id="@+id/etLng" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Longitude (-180 à 180)"
+
+        <EditText
+            android:id="@+id/etLatitude"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Latitude"
             android:inputType="numberDecimal|numberSigned" />
 
-        <Button android:id="@+id/btnAppeler" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Appeler" />
-        <Button android:id="@+id/btnEmail" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Envoyer un e-mail" />
-        <Button android:id="@+id/btnCarte" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Voir sur la carte" />
-        <Button android:id="@+id/btnEnregistrer" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Enregistrer" />
-        <Button android:id="@+id/btnAnnuler" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Annuler" />
+        <EditText
+            android:id="@+id/etLongitude"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:hint="Longitude"
+            android:inputType="numberDecimal|numberSigned" />
+
+        <Button
+            android:id="@+id/btnAppeler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📞 Appeler"
+            android:layout_marginTop="12dp" />
+
+        <Button
+            android:id="@+id/btnEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✉ Envoyer un e-mail" />
+
+        <Button
+            android:id="@+id/btnCarte"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📍 Voir sur la carte" />
+
+        <Button
+            android:id="@+id/btnEnregistrer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enregistrer"
+            android:layout_marginTop="12dp" />
+
+        <Button
+            android:id="@+id/btnSupprimer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🗑 Supprimer" />
+
+        <Button
+            android:id="@+id/btnAnnuler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Annuler" />
+
     </LinearLayout>
+
 </ScrollView>

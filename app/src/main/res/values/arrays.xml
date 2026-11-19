@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <string-array name="tailles_libelles">
+        <item>Petite</item>
+        <item>Moyenne</item>
+        <item>Grande</item>
+    </string-array>
+
+    <string-array name="tailles_valeurs">
+        <item>14</item>
+        <item>16</item>
+        <item>20</item>
+    </string-array>
+
+    <string-array name="couleurs_libelles">
+        <item>Noir</item>
+        <item>Bleu</item>
+        <item>Vert</item>
+        <item>Rouge</item>
+        <item>Violet</item>
+    </string-array>
+
+    <string-array name="couleurs_valeurs">
+        <item>#000000</item>
+        <item>#1565C0</item>
+        <item>#2E7D32</item>
+        <item>#C62828</item>
+        <item>#6A1B9A</item>
+    </string-array>
+
+    <string-array name="tri_libelles">
+        <item>Nom</item>
+        <item>Prénom</item>
+        <item>Favoris d abord</item>
+    </string-array>
+
+    <string-array name="tri_valeurs">
+        <item>nom</item>
+        <item>prenom</item>
+        <item>favoris</item>
+    </string-array>
+
+</resources>

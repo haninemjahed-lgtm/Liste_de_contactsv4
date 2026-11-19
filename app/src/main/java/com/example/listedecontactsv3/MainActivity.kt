@@ -1,29 +1,91 @@
 package com.example.listedecontactsv3
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.example.listedecontactsv3.preferences.ParametresFragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(
+    R.layout.activity_main
+) {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        // Évite que le contenu passe sous la barre d'état / de navigation
-        val container = findViewById<android.view.View>(R.id.fragment_container)
-        ViewCompat.setOnApplyWindowInsetsListener(container) { v, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-            insets
+        val navigation =
+            findViewById<BottomNavigationView>(
+                R.id.bottomNavigation
+            )
+
+        if (savedInstanceState == null) {
+
+            supportFragmentManager
+                .beginTransaction()
+                .replace(
+                    R.id.fragment_container,
+                    ListeContactsFragment()
+                )
+                .commit()
         }
 
-        // Premier lancement seulement : évite les fragments en double à la rotation
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, ListeContactsFragment())
-                .commit()
+        navigation.setOnItemSelectedListener {
+
+            when (it.itemId) {
+
+                R.id.nav_contacts -> {
+
+                    supportFragmentManager
+                        .beginTransaction()
+                        .replace(
+                            R.id.fragment_container,
+                            ListeContactsFragment()
+                        )
+                        .commit()
+
+                    true
+                }
+
+                R.id.nav_favoris -> {
+
+                    supportFragmentManager
+                        .beginTransaction()
+                        .replace(
+                            R.id.fragment_container,
+                            FavorisFragment()
+                        )
+                        .commit()
+
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_parametres -> {
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(
+                        R.id.fragment_container,
+                        ParametresFragment()
+                    )
+                    .addToBackStack(null)
+                    .commit()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 }

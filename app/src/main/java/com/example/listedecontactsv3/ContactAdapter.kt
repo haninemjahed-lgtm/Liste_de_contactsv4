@@ -1,36 +1,163 @@
 package com.example.listedecontactsv3
 
+import android.graphics.Color
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 
-class ContactAdapter(private val onClick: (Contact) -> Unit) :
-    ListAdapter<Contact, ContactAdapter.VH>(Diff) {
+class ContactAdapter(
+    private val onClick: (Contact) -> Unit,
+    private val onFavori: (Contact) -> Unit,
+    private val onAppeler: (Contact) -> Unit,
+    private val onSupprimer: (Contact) -> Unit
+) : ListAdapter<Contact, ContactAdapter.ContactViewHolder>(DIFF_CALLBACK) {
 
-    class VH(v: View) : RecyclerView.ViewHolder(v) {
-        val photo: ImageView = v.findViewById(R.id.ivPhoto)
-        val nom: TextView = v.findViewById(R.id.tvNom)
-        val tel: TextView = v.findViewById(R.id.tvTel)
+    private var taillePolice = 16f
+    private var couleurTexte = Color.BLACK
+    private var afficherAppel = false
+
+    fun appliquerPreferences(
+        taille: Float,
+        couleur: Int,
+        appel: Boolean
+    ) {
+        taillePolice = taille
+        couleurTexte = couleur
+        afficherAppel = appel
+        notifyItemRangeChanged(0, itemCount)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-        VH(LayoutInflater.from(parent.context).inflate(R.layout.item_contact, parent, false))
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): ContactViewHolder {
 
-    override fun onBindViewHolder(h: VH, position: Int) {
-        val c = getItem(position)              // élément de la liste FILTRÉE
-        h.nom.text = "${c.nom} ${c.prenom}"
-        h.tel.text = c.telephone
-        h.photo.chargerPhoto(c.photoUri)
-        h.itemView.setOnClickListener { onClick(c) }   // on renvoie le contact, pas l'indice
+        val view = LayoutInflater.from(parent.context).inflate(
+            R.layout.item_contact,
+            parent,
+            false
+        )
+
+        return ContactViewHolder(view)
     }
 
-    object Diff : DiffUtil.ItemCallback<Contact>() {
-        override fun areItemsTheSame(a: Contact, b: Contact) = a.id == b.id
-        override fun areContentsTheSame(a: Contact, b: Contact) = a == b
+    override fun onBindViewHolder(
+        holder: ContactViewHolder,
+        position: Int
+    ) {
+        holder.bind(getItem(position))
+    }
+
+    inner class ContactViewHolder(
+        itemView: View
+    ) : RecyclerView.ViewHolder(itemView) {
+
+        private val ivPhoto =
+            itemView.findViewById<ImageView>(R.id.ivContactPhoto)
+
+        private val tvNom =
+            itemView.findViewById<TextView>(R.id.tvNom)
+
+        private val tvPrenom =
+            itemView.findViewById<TextView>(R.id.tvPrenom)
+
+        private val tvTelephone =
+            itemView.findViewById<TextView>(R.id.tvTelephone)
+
+        private val btnFavori =
+            itemView.findViewById<ImageButton>(R.id.btnFavori)
+
+        private val btnSupprimer =
+            itemView.findViewById<ImageButton>(R.id.btnSupprimer)
+
+        private val btnAppeler =
+            itemView.findViewById<ImageButton>(R.id.btnAppeler)
+
+        fun bind(contact: Contact) {
+
+            tvNom.text = contact.nom
+            tvPrenom.text = contact.prenom
+            tvTelephone.text = contact.telephone
+
+            tvNom.textSize = taillePolice
+            tvPrenom.textSize = taillePolice - 1f
+            tvTelephone.textSize = taillePolice - 3f
+
+            tvNom.setTextColor(couleurTexte)
+            tvPrenom.setTextColor(couleurTexte)
+
+            if (!contact.photoUri.isNullOrEmpty()) {
+                try {
+                    ivPhoto.setImageURI(
+                        Uri.parse(contact.photoUri)
+                    )
+                } catch (e: Exception) {
+                    ivPhoto.setImageResource(
+                        android.R.drawable.ic_menu_myplaces
+                    )
+                }
+            } else {
+                ivPhoto.setImageResource(
+                    android.R.drawable.ic_menu_myplaces
+                )
+            }
+
+            btnFavori.setImageResource(
+                if (contact.favori)
+                    android.R.drawable.btn_star_big_on
+                else
+                    android.R.drawable.btn_star_big_off
+            )
+
+            btnAppeler.visibility =
+                if (afficherAppel)
+                    View.VISIBLE
+                else
+                    View.GONE
+
+            itemView.setOnClickListener {
+                onClick(contact)
+            }
+
+            btnFavori.setOnClickListener {
+                onFavori(contact)
+            }
+
+            btnSupprimer.setOnClickListener {
+                onSupprimer(contact)
+            }
+
+            btnAppeler.setOnClickListener {
+                onAppeler(contact)
+            }
+        }
+    }
+
+    companion object {
+
+        private val DIFF_CALLBACK =
+            object : DiffUtil.ItemCallback<Contact>() {
+
+                override fun areItemsTheSame(
+                    oldItem: Contact,
+                    newItem: Contact
+                ): Boolean {
+                    return oldItem.id == newItem.id
+                }
+
+                override fun areContentsTheSame(
+                    oldItem: Contact,
+                    newItem: Contact
+                ): Boolean {
+                    return oldItem == newItem
+                }
+            }
     }
 }
