@@ -1,11 +1,13 @@
 package com.example.listedecontactsv3
 
 import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -14,485 +16,415 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import com.example.listedecontactsv3.preferences.PreferencesManager
 import java.io.File
 import java.io.FileOutputStream
 
-class DetailContactFragment :
-    Fragment(R.layout.fragment_detail_contact) {
+class DetailContactFragment : Fragment() {
 
     private val vm: ContactViewModel by activityViewModels()
 
     private var contactId: Long = 0L
     private var photoUri: String? = null
+    private var favori: Boolean = false
+    private var cameraTempUri: Uri? = null
 
     private lateinit var ivPhoto: ImageView
+    private lateinit var btnGalerie: Button
+    private lateinit var btnCamera: Button
+    private lateinit var btnFavori: Button
     private lateinit var etNom: EditText
     private lateinit var etPrenom: EditText
     private lateinit var etTelephone: EditText
     private lateinit var etEmail: EditText
     private lateinit var etLatitude: EditText
     private lateinit var etLongitude: EditText
+    private lateinit var btnAppeler: Button
+    private lateinit var btnEmail: Button
+    private lateinit var btnCarte: Button
+    private lateinit var btnEnregistrer: Button
+    private lateinit var btnAnnuler: Button
+    private lateinit var btnSupprimer: Button
 
     private val choisirPhoto =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
-                photoUri = uri.toString()
-                ivPhoto.setImageURI(uri)
+                val cheminInterne = copierDansStockageInterne(uri)
+                if (cheminInterne != null) {
+                    photoUri = cheminInterne
+                    ivPhoto.setImageURI(cheminInterne.toUri())
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Impossible de copier la photo",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
 
     private val prendrePhoto =
-        registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-            if (bitmap != null) {
-                photoUri = sauvegarderBitmap(bitmap)
-                ivPhoto.setImageBitmap(bitmap)
-            }
-        }
-
-    companion object {
-
-        private const val ARG_ID = "contact_id"
-
-        fun newInstance(id: Long): DetailContactFragment {
-            return DetailContactFragment().apply {
-                arguments = Bundle().apply {
-                    putLong(ARG_ID, id)
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { succes ->
+            if (succes && cameraTempUri != null) {
+                val cheminInterne = copierDansStockageInterne(cameraTempUri!!)
+                if (cheminInterne != null) {
+                    photoUri = cheminInterne
+                    ivPhoto.setImageURI(cheminInterne.toUri())
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Impossible d'enregistrer la photo prise",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
 
-        fun newInstanceForCreation(): DetailContactFragment {
-            return DetailContactFragment().apply {
-                arguments = Bundle().apply {
-                    putLong(ARG_ID, 0L)
-                }
-            }
-        }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        contactId = arguments?.getLong(ARG_CONTACT_ID, 0L) ?: 0L
     }
 
-    override fun onViewCreated(
-        view: View,
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ) {
+    ): View {
+        return inflater.inflate(R.layout.fragment_detail_contact, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        contactId = requireArguments().getLong(ARG_ID, 0L)
-
         ivPhoto = view.findViewById(R.id.ivPhoto)
+        btnGalerie = view.findViewById(R.id.btnGalerie)
+        btnCamera = view.findViewById(R.id.btnCamera)
+        btnFavori = view.findViewById(R.id.btnFavori)
         etNom = view.findViewById(R.id.etNom)
         etPrenom = view.findViewById(R.id.etPrenom)
         etTelephone = view.findViewById(R.id.etTelephone)
         etEmail = view.findViewById(R.id.etEmail)
         etLatitude = view.findViewById(R.id.etLatitude)
         etLongitude = view.findViewById(R.id.etLongitude)
+        btnAppeler = view.findViewById(R.id.btnAppeler)
+        btnEmail = view.findViewById(R.id.btnEmail)
+        btnCarte = view.findViewById(R.id.btnCarte)
+        btnEnregistrer = view.findViewById(R.id.btnEnregistrer)
+        btnAnnuler = view.findViewById(R.id.btnAnnuler)
+        btnSupprimer = view.findViewById(R.id.btnSupprimer)
 
-        val btnGalerie = view.findViewById<Button>(R.id.btnGalerie)
-        val btnCamera = view.findViewById<Button>(R.id.btnCamera)
-        val btnAppeler = view.findViewById<Button>(R.id.btnAppeler)
-        val btnEmail = view.findViewById<Button>(R.id.btnEmail)
-        val btnCarte = view.findViewById<Button>(R.id.btnCarte)
-        val btnEnregistrer = view.findViewById<Button>(R.id.btnEnregistrer)
-        val btnAnnuler = view.findViewById<Button>(R.id.btnAnnuler)
-        val btnSupprimer = view.findViewById<Button>(R.id.btnSupprimer)
+        appliquerPreferencesAffichage()
 
-        // MODE CREATION
-        if (contactId == 0L) {
-
-            btnSupprimer.visibility = View.GONE
-
+        if (savedInstanceState != null) {
+            photoUri = savedInstanceState.getString(STATE_PHOTO_URI)
+            favori = savedInstanceState.getBoolean(STATE_FAVORI, false)
+            if (!photoUri.isNullOrBlank()) {
+                ivPhoto.setImageURI(photoUri!!.toUri())
+            } else {
+                ivPhoto.setImageResource(android.R.drawable.ic_menu_myplaces)
+            }
+            afficherFavori(btnFavori)
         } else {
+            afficherFavori(btnFavori)
+            ivPhoto.setImageResource(android.R.drawable.ic_menu_myplaces)
 
-            // MODE MODIFICATION
-            btnSupprimer.visibility = View.VISIBLE
-
-            vm.getByIdAsync(contactId) { contact ->
-
-                if (!isAdded || contact == null) {
-                    return@getByIdAsync
-                }
-
-                etNom.setText(contact.nom)
-                etPrenom.setText(contact.prenom)
-                etTelephone.setText(contact.telephone)
-                etEmail.setText(contact.email ?: "")
-
-                etLatitude.setText(
-                    contact.latitude?.toString() ?: ""
-                )
-
-                etLongitude.setText(
-                    contact.longitude?.toString() ?: ""
-                )
-
-                photoUri = contact.photoUri
-
-                if (!contact.photoUri.isNullOrEmpty()) {
-                    try {
-                        ivPhoto.setImageURI(
-                            contact.photoUri.toUri()
-                        )
-                    } catch (_: Exception) {
+            if (contactId != 0L) {
+                vm.getByIdAsync(contactId) { contact ->
+                    if (!isAdded) return@getByIdAsync
+                    if (contact == null) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Contact introuvable",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        parentFragmentManager.popBackStack()
+                        return@getByIdAsync
                     }
+
+                    etNom.setText(contact.nom)
+                    etPrenom.setText(contact.prenom)
+                    etTelephone.setText(contact.telephone)
+                    etEmail.setText(contact.email.orEmpty())
+                    etLatitude.setText(contact.latitude?.toString().orEmpty())
+                    etLongitude.setText(contact.longitude?.toString().orEmpty())
+
+                    photoUri = contact.photoUri
+                    if (!photoUri.isNullOrBlank()) {
+                        ivPhoto.setImageURI(photoUri!!.toUri())
+                    }
+
+                    favori = contact.favori
+                    afficherFavori(btnFavori)
                 }
             }
         }
 
-        // PHOTO GALERIE
+        btnSupprimer.visibility = if (contactId != 0L) View.VISIBLE else View.GONE
+
         btnGalerie.setOnClickListener {
             choisirPhoto.launch("image/*")
         }
 
-        // PHOTO CAMERA
         btnCamera.setOnClickListener {
-            prendrePhoto.launch(null)
+            preparerEtLancerCamera()
         }
 
-        // APPEL
+        btnFavori.setOnClickListener {
+            favori = !favori
+            afficherFavori(btnFavori)
+        }
+
         btnAppeler.setOnClickListener {
-            appeler()
-        }
-
-        // EMAIL
-        btnEmail.setOnClickListener {
-            envoyerEmail()
-        }
-
-        // CARTE
-        btnCarte.setOnClickListener {
-
-            if (contactId == 0L) {
-
+            val tel = etTelephone.text.toString().trim()
+            if (tel.isBlank()) {
                 Toast.makeText(
                     requireContext(),
-                    "Enregistrez d'abord le contact.",
+                    "Numéro de téléphone vide.",
                     Toast.LENGTH_SHORT
                 ).show()
-
                 return@setOnClickListener
             }
+            try {
+                startActivity(Intent(Intent.ACTION_DIAL, "tel:${Uri.encode(tel)}".toUri()))
+            } catch (_: ActivityNotFoundException) {
+                Toast.makeText(
+                    requireContext(),
+                    "Aucune application téléphone disponible.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
 
-            parentFragmentManager
-                .beginTransaction()
-                .replace(
-                    R.id.fragment_container,
-                    CarteContactFragment.newInstance(contactId)
-                )
+        btnEmail.setOnClickListener {
+            val mail = etEmail.text.toString().trim()
+            if (mail.isBlank()) {
+                Toast.makeText(
+                    requireContext(),
+                    "Adresse e-mail absente.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+            try {
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = "mailto:${Uri.encode(mail)}".toUri()
+                }
+                startActivity(intent)
+            } catch (_: ActivityNotFoundException) {
+                Toast.makeText(
+                    requireContext(),
+                    "Aucune application de messagerie disponible.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        btnCarte.setOnClickListener {
+            val coords = lireEtValiderCoordonnees() ?: return@setOnClickListener
+            if (coords.first == null || coords.second == null) {
+                Toast.makeText(
+                    requireContext(),
+                    "Coordonnées GPS absentes pour ce contact.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, CarteContactFragment.newInstance(contactId))
                 .addToBackStack(null)
                 .commit()
         }
 
-        // ENREGISTRER
         btnEnregistrer.setOnClickListener {
             enregistrer()
         }
 
-        // ANNULER
         btnAnnuler.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
-        // SUPPRIMER
         btnSupprimer.setOnClickListener {
             confirmerSuppression()
         }
     }
 
-    private fun enregistrer() {
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_PHOTO_URI, photoUri)
+        outState.putBoolean(STATE_FAVORI, favori)
+    }
 
+    private fun appliquerPreferencesAffichage() {
+        val ctx = requireContext()
+        val taille = PreferencesManager.taillePolice(ctx)
+        val couleur = PreferencesManager.couleurTexte(ctx)
+
+        listOf(etNom, etPrenom, etTelephone).forEach { champ ->
+            champ.textSize = taille
+        }
+        etNom.setTextColor(couleur)
+        etPrenom.setTextColor(couleur)
+    }
+
+    private fun afficherFavori(bouton: Button) {
+        bouton.text = if (favori) "★ Favori" else "☆ Favori"
+    }
+
+    private fun preparerEtLancerCamera() {
+        try {
+            val fichierTemp = File(
+                requireContext().cacheDir,
+                "capture_${System.currentTimeMillis()}.jpg"
+            )
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                fichierTemp
+            )
+            cameraTempUri = uri
+            prendrePhoto.launch(uri)
+        } catch (_: Exception) {
+            Toast.makeText(
+                requireContext(),
+                "Impossible d'ouvrir la caméra.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun copierDansStockageInterne(uri: Uri): String? {
+        return try {
+            val fichier = File(
+                requireContext().filesDir,
+                "photo_${System.currentTimeMillis()}.jpg"
+            )
+            requireContext().contentResolver.openInputStream(uri)?.use { entree ->
+                FileOutputStream(fichier).use { sortie ->
+                    entree.copyTo(sortie)
+                }
+            } ?: return null
+            Uri.fromFile(fichier).toString()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun lireEtValiderCoordonnees(): Pair<Double?, Double?>? {
+        val latText = etLatitude.text.toString().trim()
+        val lonText = etLongitude.text.toString().trim()
+
+        if (latText.isEmpty() && lonText.isEmpty()) {
+            return null to null
+        }
+
+        if (latText.isEmpty() || lonText.isEmpty()) {
+            Toast.makeText(
+                requireContext(),
+                "Renseignez à la fois la latitude et la longitude, ou laissez les deux vides.",
+                Toast.LENGTH_SHORT
+            ).show()
+            return null
+        }
+
+        val lat = latText.toDoubleOrNull()
+        val lon = lonText.toDoubleOrNull()
+
+        if (lat == null || lon == null || lat !in -90.0..90.0 || lon !in -180.0..180.0) {
+            Toast.makeText(
+                requireContext(),
+                "Coordonnées GPS invalides (latitude : -90..90, longitude : -180..180).",
+                Toast.LENGTH_SHORT
+            ).show()
+            return null
+        }
+
+        return lat to lon
+    }
+
+    private fun enregistrer() {
         val nom = etNom.text.toString().trim()
         val prenom = etPrenom.text.toString().trim()
         val telephone = etTelephone.text.toString().trim()
         val email = etEmail.text.toString().trim()
 
-        // VALIDATION NOM
-        if (nom.isEmpty()) {
-
-            etNom.error = "Nom obligatoire"
-            etNom.requestFocus()
-
-            return
-        }
-
-        // VALIDATION PRENOM
-        if (prenom.isEmpty()) {
-
-            etPrenom.error = "Prénom obligatoire"
-            etPrenom.requestFocus()
-
-            return
-        }
-
-        // VALIDATION TELEPHONE
-        if (telephone.isEmpty()) {
-
-            etTelephone.error = "Téléphone obligatoire"
-            etTelephone.requestFocus()
-
-            return
-        }
-
-        // GPS
-        val latitudeText =
-            etLatitude.text.toString().trim()
-
-        val longitudeText =
-            etLongitude.text.toString().trim()
-
-        val latitude =
-            if (latitudeText.isEmpty()) {
-                null
-            } else {
-                latitudeText.toDoubleOrNull()
-            }
-
-        val longitude =
-            if (longitudeText.isEmpty()) {
-                null
-            } else {
-                longitudeText.toDoubleOrNull()
-            }
-
-        // Latitude invalide
-        if (
-            latitudeText.isNotEmpty() &&
-            latitude == null
-        ) {
-
-            etLatitude.error = "Latitude invalide"
-            etLatitude.requestFocus()
-
-            return
-        }
-
-        // Longitude invalide
-        if (
-            longitudeText.isNotEmpty() &&
-            longitude == null
-        ) {
-
-            etLongitude.error = "Longitude invalide"
-            etLongitude.requestFocus()
-
-            return
-        }
-
-        // Une seule coordonnée
-        if (
-            (latitude == null) !=
-            (longitude == null)
-        ) {
-
+        if (nom.isEmpty() || prenom.isEmpty() || telephone.isEmpty()) {
             Toast.makeText(
                 requireContext(),
-                "Veuillez saisir latitude et longitude ensemble.",
+                "Nom, prénom et téléphone sont obligatoires.",
                 Toast.LENGTH_SHORT
             ).show()
-
             return
         }
 
-        // Vérification latitude
-        if (
-            latitude != null &&
-            latitude !in -90.0..90.0
-        ) {
-
-            etLatitude.error =
-                "Latitude entre -90 et 90"
-
-            return
-        }
-
-        // Vérification longitude
-        if (
-            longitude != null &&
-            longitude !in -180.0..180.0
-        ) {
-
-            etLongitude.error =
-                "Longitude entre -180 et 180"
-
-            return
-        }
+        val coords = lireEtValiderCoordonnees() ?: return
 
         val contact = Contact(
-
             id = contactId,
-
             nom = nom,
-
             prenom = prenom,
-
             telephone = telephone,
-
-            email =
-                email.ifEmpty {
-                    null
-                },
-
+            email = email.ifEmpty { null },
             photoUri = photoUri,
-
-            latitude = latitude,
-
-            longitude = longitude
+            latitude = coords.first,
+            longitude = coords.second,
+            favori = favori
         )
 
-        // AJOUT
         if (contactId == 0L) {
-
-            vm.insert(contact)
-
-            Toast.makeText(
-                requireContext(),
-                "Contact ajouté avec succès",
-                Toast.LENGTH_SHORT
-            ).show()
-
+            vm.insert(contact) { ok ->
+                if (!isAdded) return@insert
+                Toast.makeText(
+                    requireContext(),
+                    if (ok) "Contact ajouté avec succès" else "Échec de l'ajout",
+                    Toast.LENGTH_SHORT
+                ).show()
+                if (ok) parentFragmentManager.popBackStack()
+            }
         } else {
-
-            // MODIFICATION
-            vm.update(contact)
-
-            Toast.makeText(
-                requireContext(),
-                "Contact modifié avec succès",
-                Toast.LENGTH_SHORT
-            ).show()
+            vm.update(contact) { ok ->
+                if (!isAdded) return@update
+                Toast.makeText(
+                    requireContext(),
+                    if (ok) "Contact mis à jour" else "Contact introuvable ou échec de mise à jour",
+                    Toast.LENGTH_SHORT
+                ).show()
+                if (ok) parentFragmentManager.popBackStack()
+            }
         }
-
-        parentFragmentManager.popBackStack()
     }
 
     private fun confirmerSuppression() {
-
         AlertDialog.Builder(requireContext())
-
             .setTitle("Supprimer le contact")
-
-            .setMessage(
-                "Voulez-vous vraiment supprimer ce contact ?"
-            )
-
+            .setMessage("Voulez-vous vraiment supprimer ce contact ?")
             .setPositiveButton("Supprimer") { _, _ ->
-
-                vm.delete(contactId)
-
-                Toast.makeText(
-                    requireContext(),
-                    "Contact supprimé",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                parentFragmentManager.popBackStack()
+                vm.delete(contactId) { ok ->
+                    if (!isAdded) return@delete
+                    Toast.makeText(
+                        requireContext(),
+                        if (ok) "Contact supprimé" else "Contact introuvable",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    if (ok) parentFragmentManager.popBackStack()
+                }
             }
-
-            .setNegativeButton(
-                "Annuler",
-                null
-            )
-
+            .setNegativeButton("Annuler", null)
             .show()
     }
 
-    private fun appeler() {
+    companion object {
+        private const val ARG_CONTACT_ID = "arg_contact_id"
+        private const val STATE_PHOTO_URI = "state_photo_uri"
+        private const val STATE_FAVORI = "state_favori"
 
-        val numero =
-            etTelephone.text.toString().trim()
+        fun newInstanceForCreation(): DetailContactFragment = newInstance(0L)
 
-        if (numero.isEmpty()) {
-
-            Toast.makeText(
-                requireContext(),
-                "Numéro de téléphone vide.",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            return
-        }
-
-        val intent =
-            Intent(
-                Intent.ACTION_DIAL,
-                Uri.parse("tel:$numero")
-            )
-
-        try {
-
-            startActivity(intent)
-
-        } catch (_: Exception) {
-
-            Toast.makeText(
-                requireContext(),
-                "Aucune application téléphone disponible.",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    private fun envoyerEmail() {
-
-        val email =
-            etEmail.text.toString().trim()
-
-        if (email.isEmpty()) {
-
-            Toast.makeText(
-                requireContext(),
-                "Adresse e-mail vide.",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            return
-        }
-
-        val intent =
-            Intent(Intent.ACTION_SENDTO).apply {
-
-                data =
-                    Uri.parse("mailto:$email")
+        fun newInstance(contactId: Long): DetailContactFragment {
+            return DetailContactFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_CONTACT_ID, contactId)
+                }
             }
-
-        try {
-
-            startActivity(intent)
-
-        } catch (_: Exception) {
-
-            Toast.makeText(
-                requireContext(),
-                "Aucune application e-mail disponible.",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    private fun sauvegarderBitmap(
-        bitmap: Bitmap
-    ): String? {
-
-        return try {
-
-            val fichier =
-                File(
-                    requireContext().filesDir,
-                    "photo_${System.currentTimeMillis()}.jpg"
-                )
-
-            FileOutputStream(fichier).use { output ->
-
-                bitmap.compress(
-                    Bitmap.CompressFormat.JPEG,
-                    90,
-                    output
-                )
-            }
-
-            Uri.fromFile(fichier).toString()
-
-        } catch (_: Exception) {
-
-            null
         }
     }
 }

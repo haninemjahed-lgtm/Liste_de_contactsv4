@@ -1,13 +1,15 @@
 package com.example.listedecontactsv3
 
 import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -16,8 +18,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.listedecontactsv3.preferences.ParametresFragment
 import com.example.listedecontactsv3.preferences.PreferencesManager
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import kotlinx.coroutines.launch
 
 class ListeContactsFragment :
@@ -58,27 +60,73 @@ class ListeContactsFragment :
                 R.id.etRecherche
             )
 
-        val btnAjouter =
-            view.findViewById<ExtendedFloatingActionButton>(
-                R.id.btnAjouter
+        val btnParametres =
+            view.findViewById<ImageButton>(
+                R.id.btnParametres
             )
 
-        adapter = ContactAdapter(
+        btnParametres?.setOnClickListener { anchor ->
+            val popup = android.widget.PopupMenu(requireContext(), anchor)
+            popup.menu.add(0, 1, 0, "Mes favoris")
+            popup.menu.add(0, 2, 1, "Paramètres")
+            popup.menu.add(0, 3, 2, "Nouveau contact")
 
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> {
+                        parentFragmentManager
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, FavorisFragment())
+                            .addToBackStack(null)
+                            .commit()
+                        true
+                    }
+                    2 -> {
+                        if (parentFragmentManager.findFragmentById(R.id.fragment_container) !is ParametresFragment) {
+                            parentFragmentManager
+                                .beginTransaction()
+                                .replace(R.id.fragment_container, ParametresFragment())
+                                .addToBackStack(null)
+                                .commit()
+                        }
+                        true
+                    }
+                    3 -> {
+                        parentFragmentManager
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, DetailContactFragment.newInstanceForCreation())
+                            .addToBackStack(null)
+                            .commit()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
+        }
+
+        view.findViewById<View>(R.id.btnAjouterContact)?.setOnClickListener {
+            parentFragmentManager
+                .beginTransaction()
+                .replace(
+                    R.id.fragment_container,
+                    DetailContactFragment.newInstanceForCreation()
+                )
+                .addToBackStack(null)
+                .commit()
+        }
+
+        adapter = ContactAdapter(
             onClick = { contact ->
-                parentFragmentManager
-                    .beginTransaction()
-                    .replace(
-                        R.id.fragment_container,
-                        DetailContactFragment
-                            .newInstance(contact.id)
-                    )
-                    .addToBackStack(null)
-                    .commit()
+                ouvrirDetail(contact.id)
             },
 
             onFavori = { contact ->
                 vm.changerFavori(contact)
+            },
+
+            onModifier = { contact ->
+                ouvrirDetail(contact.id)
             },
 
             onSupprimer = { contact ->
@@ -86,12 +134,28 @@ class ListeContactsFragment :
             },
 
             onAppeler = { contact ->
-                val intent = Intent(
-                    Intent.ACTION_DIAL,
-                    Uri.parse("tel:${contact.telephone}")
-                )
-
-                startActivity(intent)
+                val tel = contact.telephone.trim()
+                if (tel.isBlank()) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Numéro de téléphone vide.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    try {
+                        val intent = Intent(
+                            Intent.ACTION_DIAL,
+                            "tel:${android.net.Uri.encode(tel)}".toUri()
+                        )
+                        startActivity(intent)
+                    } catch (_: ActivityNotFoundException) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Aucune application téléphone disponible.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             }
         )
 
@@ -110,24 +174,11 @@ class ListeContactsFragment :
             )
         }
 
-        btnAjouter.setOnClickListener {
-            parentFragmentManager
-                .beginTransaction()
-                .replace(
-                    R.id.fragment_container,
-                    DetailContactFragment
-                        .newInstanceForCreation()
-                )
-                .addToBackStack(null)
-                .commit()
-        }
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(
                 Lifecycle.State.STARTED
             ) {
                 vm.contactsFiltres.collect { liste ->
-
                     adapter.submitList(liste)
 
                     tvVide.visibility =
@@ -141,10 +192,20 @@ class ListeContactsFragment :
         }
     }
 
+    private fun ouvrirDetail(contactId: Long) {
+        parentFragmentManager
+            .beginTransaction()
+            .replace(
+                R.id.fragment_container,
+                DetailContactFragment.newInstance(contactId)
+            )
+            .addToBackStack(null)
+            .commit()
+    }
+
     private fun confirmerSuppression(
         contact: Contact
     ) {
-
         AlertDialog.Builder(requireContext())
             .setTitle("Supprimer le contact")
             .setMessage(
@@ -157,14 +218,14 @@ class ListeContactsFragment :
             .setPositiveButton(
                 "Supprimer"
             ) { _, _ ->
-
-                vm.delete(contact.id)
-
-                Toast.makeText(
-                    requireContext(),
-                    "Contact supprimé",
-                    Toast.LENGTH_SHORT
-                ).show()
+                vm.delete(contact.id) { ok ->
+                    if (!isAdded) return@delete
+                    Toast.makeText(
+                        requireContext(),
+                        if (ok) "Contact supprimé" else "Contact introuvable",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
             .show()
     }

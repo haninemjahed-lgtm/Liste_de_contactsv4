@@ -87,8 +87,8 @@ class ContactDbHelper private constructor(
             "22123456",
             "ahmed@mail.com",
             null,
-            36.4000,
-            10.6167,
+            null,
+            null,
             false
         )
     }
@@ -113,18 +113,26 @@ class ContactDbHelper private constructor(
 
             if (email != null) {
                 put(ContactContract.COLUMN_EMAIL, email)
+            } else {
+                putNull(ContactContract.COLUMN_EMAIL)
             }
 
             if (photoUri != null) {
                 put(ContactContract.COLUMN_PHOTO_URI, photoUri)
+            } else {
+                putNull(ContactContract.COLUMN_PHOTO_URI)
             }
 
             if (latitude != null) {
                 put(ContactContract.COLUMN_LATITUDE, latitude)
+            } else {
+                putNull(ContactContract.COLUMN_LATITUDE)
             }
 
             if (longitude != null) {
                 put(ContactContract.COLUMN_LONGITUDE, longitude)
+            } else {
+                putNull(ContactContract.COLUMN_LONGITUDE)
             }
 
             put(

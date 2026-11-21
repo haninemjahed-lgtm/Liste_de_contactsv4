@@ -212,6 +212,29 @@ class ContactDao(
             liste
         }
     }
+    fun insertBatchSansTransaction(contacts: List<Contact>): Long {
+        val debut = android.os.SystemClock.elapsedRealtime()
+        val db = dbHelper.writableDatabase
+        for (contact in contacts) {
+            db.insert(ContactContract.TABLE_NAME, null, contactToValues(contact))
+        }
+        return android.os.SystemClock.elapsedRealtime() - debut
+    }
+
+    fun insertBatchAvecTransaction(contacts: List<Contact>): Long {
+        val debut = android.os.SystemClock.elapsedRealtime()
+        val db = dbHelper.writableDatabase
+        db.beginTransaction()
+        try {
+            for (contact in contacts) {
+                db.insert(ContactContract.TABLE_NAME, null, contactToValues(contact))
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        return android.os.SystemClock.elapsedRealtime() - debut
+    }
 
     private fun contactToValues(
         contact: Contact

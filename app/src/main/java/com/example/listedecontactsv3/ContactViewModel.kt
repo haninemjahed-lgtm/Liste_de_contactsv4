@@ -216,6 +216,85 @@ class ContactViewModel(
         }
     }
 
+    fun insert(
+        contact: Contact,
+        onResult: (Boolean) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val id = withContext(Dispatchers.IO) {
+                dao.insert(contact)
+            }
+            chargerContacts()
+            onResult(id != -1L)
+        }
+    }
+
+    fun update(
+        contact: Contact,
+        onResult: (Boolean) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val rows = withContext(Dispatchers.IO) {
+                dao.update(contact)
+            }
+            chargerContacts()
+            onResult(rows == 1)
+        }
+    }
+
+    fun delete(
+        id: Long,
+        onResult: (Boolean) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val rows = withContext(Dispatchers.IO) {
+                dao.delete(id)
+            }
+            chargerContacts()
+            onResult(rows > 0)
+        }
+    }
+
+    fun executerBenchmark100Contacts(
+        onDone: (dureeSansTxMs: Long, dureeAvecTxMs: Long) -> Unit
+    ) {
+        viewModelScope.launch {
+            val lot1 = List(100) { i ->
+                Contact(
+                    nom = "TestSansTx_${i + 1}",
+                    prenom = "Contact",
+                    telephone = "+216 20 ${(100 + i)}",
+                    email = null,
+                    photoUri = null,
+                    latitude = null,
+                    longitude = null,
+                    favori = false
+                )
+            }
+            val lot2 = List(100) { i ->
+                Contact(
+                    nom = "TestAvecTx_${i + 1}",
+                    prenom = "Contact",
+                    telephone = "+216 21 ${(100 + i)}",
+                    email = null,
+                    photoUri = null,
+                    latitude = null,
+                    longitude = null,
+                    favori = false
+                )
+            }
+
+            val (sansTx, avecTx) = withContext(Dispatchers.IO) {
+                val tSans = dao.insertBatchSansTransaction(lot1)
+                val tAvec = dao.insertBatchAvecTransaction(lot2)
+                tSans to tAvec
+            }
+
+            chargerContacts()
+            onDone(sansTx, avecTx)
+        }
+    }
+
     private fun appliquerRecherche() {
 
         val q = _recherche.value.trim()

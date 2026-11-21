@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <PreferenceScreen
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
@@ -40,6 +39,16 @@
             app:title="Appel depuis la liste"
             app:summary="Permettre l'appel depuis la liste"
             app:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="Bonus et Performance SQLite">
+
+        <Preference
+            app:key="benchmark_100_contacts"
+            app:title="Importer 100 contacts (Test transaction)"
+            app:summary="Compare l'insertion sans transaction vs avec transaction unique" />
 
     </PreferenceCategory>
 

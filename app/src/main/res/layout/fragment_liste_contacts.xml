@@ -1,76 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F7FB">
+    android:background="@drawable/bg_bottom_area">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:paddingTop="18dp">
+        android:orientation="vertical">
 
-        <!-- EN-TÊTE -->
+        <!-- ZONE HAUT : EN-TÊTE + RECHERCHE -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginBottom="18dp">
+            android:background="@drawable/bg_top_header"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="18dp"
+            android:layout_marginBottom="8dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mes contacts"
-                android:textColor="#1D1B20"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:fontFamily="sans"
-                android:letterSpacing="0.01"
-                android:layout_marginBottom="4dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Retrouvez facilement vos contacts"
-                android:textColor="#77747E"
-                android:textSize="14sp"
-                android:fontFamily="sans"/>
-
-        </LinearLayout>
-
-        <!-- RECHERCHE -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="18dp"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="18dp"
-            app:boxCornerRadiusTopEnd="18dp"
-            app:boxCornerRadiusBottomStart="18dp"
-            app:boxCornerRadiusBottomEnd="18dp"
-            app:boxStrokeColor="#6D4C9F"
-            app:startIconDrawable="@android:drawable/ic_menu_search"
-            app:hintTextColor="#77747E"
-            app:boxStrokeWidth="1dp"
-            app:boxStrokeWidthFocused="2dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etRecherche"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Rechercher un contact"
-                android:textSize="15sp"
-                android:singleLine="true"
-                android:inputType="text"
-                android:paddingTop="14dp"
-                android:paddingBottom="14dp"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mes contacts"
+                        android:textColor="#FFFFFF"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans"
+                        android:letterSpacing="0.01"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Retrouvez facilement vos contacts"
+                        android:textColor="#DCEBFF"
+                        android:textSize="14sp"
+                        android:fontFamily="sans" />
+
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/btnParametres"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Plus d'options"
+                    android:padding="12dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_more_vert"
+                    app:tint="@android:color/white" />
+
+            </LinearLayout>
+
+            <!-- RECHERCHE -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="#FFFFFF"
+                app:boxCornerRadiusTopStart="18dp"
+                app:boxCornerRadiusTopEnd="18dp"
+                app:boxCornerRadiusBottomStart="18dp"
+                app:boxCornerRadiusBottomEnd="18dp"
+                app:boxStrokeColor="#FFFFFF"
+                app:startIconDrawable="@android:drawable/ic_menu_search"
+                app:startIconTint="#1565C0"
+                app:hintTextColor="#DCEBFF"
+                app:boxStrokeWidth="1dp"
+                app:boxStrokeWidthFocused="2dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etRecherche"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Rechercher un contact"
+                    android:textColor="#1D1B20"
+                    android:textColorHint="#607D8B"
+                    android:textSize="15sp"
+                    android:singleLine="true"
+                    android:inputType="text"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
 
         <!-- MESSAGE VIDE -->
         <LinearLayout
@@ -85,8 +117,10 @@
             <ImageView
                 android:layout_width="70dp"
                 android:layout_height="70dp"
+                android:background="@drawable/bg_contact_avatar"
+                android:padding="16dp"
                 android:src="@android:drawable/ic_menu_myplaces"
-                android:alpha="0.35"/>
+                android:alpha="0.85" />
 
             <TextView
                 android:id="@+id/tvVide"
@@ -96,7 +130,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="#45414A"
-                android:layout_marginTop="12dp"/>
+                android:layout_marginTop="12dp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -105,7 +139,7 @@
                 android:textSize="13sp"
                 android:textColor="#85818B"
                 android:gravity="center"
-                android:layout_marginTop="5dp"/>
+                android:layout_marginTop="5dp" />
 
         </LinearLayout>
 
@@ -115,30 +149,26 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
             android:clipToPadding="false"
-            android:paddingTop="2dp"
+            android:paddingTop="4dp"
             android:paddingBottom="100dp"
-            android:scrollbars="none"/>
+            android:scrollbars="none" />
 
     </LinearLayout>
 
-    <!-- BOUTON AJOUTER -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/btnAjouter"
+    <!-- BOUTON + FLOTTANT EN BAS À DROITE -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnAjouterContact"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="22dp"
-        android:text="Ajouter"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
-        android:textSize="14sp"
+        android:layout_margin="18dp"
         android:contentDescription="Ajouter un contact"
-        android:backgroundTint="#6D4C9F"
-        app:icon="@android:drawable/ic_input_add"
-        app:iconTint="@android:color/white"
-        app:cornerRadius="18dp"
-        app:elevation="8dp"/>
+        android:src="@android:drawable/ic_input_add"
+        app:backgroundTint="#1565C0"
+        app:tint="@android:color/white"
+        app:elevation="6dp" />
 
 </FrameLayout>
