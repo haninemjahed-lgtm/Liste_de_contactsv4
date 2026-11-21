@@ -3,6 +3,7 @@ package com.example.listedecontactsv3
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -52,7 +53,7 @@ class DetailContactFragment : Fragment() {
                 val cheminInterne = copierDansStockageInterne(uri)
                 if (cheminInterne != null) {
                     photoUri = cheminInterne
-                    ivPhoto.setImageURI(cheminInterne.toUri())
+                    afficherPhoto(photoUri)
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -69,7 +70,7 @@ class DetailContactFragment : Fragment() {
                 val cheminInterne = copierDansStockageInterne(cameraTempUri!!)
                 if (cheminInterne != null) {
                     photoUri = cheminInterne
-                    ivPhoto.setImageURI(cheminInterne.toUri())
+                    afficherPhoto(photoUri)
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -118,15 +119,11 @@ class DetailContactFragment : Fragment() {
         if (savedInstanceState != null) {
             photoUri = savedInstanceState.getString(STATE_PHOTO_URI)
             favori = savedInstanceState.getBoolean(STATE_FAVORI, false)
-            if (!photoUri.isNullOrBlank()) {
-                ivPhoto.setImageURI(photoUri!!.toUri())
-            } else {
-                ivPhoto.setImageResource(android.R.drawable.ic_menu_myplaces)
-            }
+            afficherPhoto(photoUri)
             afficherFavori(btnFavori)
         } else {
             afficherFavori(btnFavori)
-            ivPhoto.setImageResource(android.R.drawable.ic_menu_myplaces)
+            afficherPhoto(null)
 
             if (contactId != 0L) {
                 vm.getByIdAsync(contactId) { contact ->
@@ -149,9 +146,7 @@ class DetailContactFragment : Fragment() {
                     etLongitude.setText(contact.longitude?.toString().orEmpty())
 
                     photoUri = contact.photoUri
-                    if (!photoUri.isNullOrBlank()) {
-                        ivPhoto.setImageURI(photoUri!!.toUri())
-                    }
+                    afficherPhoto(photoUri)
 
                     favori = contact.favori
                     afficherFavori(btnFavori)
@@ -252,6 +247,21 @@ class DetailContactFragment : Fragment() {
         super.onSaveInstanceState(outState)
         outState.putString(STATE_PHOTO_URI, photoUri)
         outState.putBoolean(STATE_FAVORI, favori)
+    }
+
+    private fun afficherPhoto(uriStr: String?) {
+        val pxPaddingDefaut = (20 * resources.displayMetrics.density).toInt()
+        if (!uriStr.isNullOrBlank()) {
+            ivPhoto.setBackgroundColor(Color.TRANSPARENT)
+            ivPhoto.setPadding(0, 0, 0, 0)
+            ivPhoto.scaleType = ImageView.ScaleType.CENTER_CROP
+            ivPhoto.setImageURI(uriStr.toUri())
+        } else {
+            ivPhoto.setBackgroundResource(R.drawable.bg_contact_avatar)
+            ivPhoto.setPadding(pxPaddingDefaut, pxPaddingDefaut, pxPaddingDefaut, pxPaddingDefaut)
+            ivPhoto.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            ivPhoto.setImageResource(android.R.drawable.ic_menu_myplaces)
+        }
     }
 
     private fun appliquerPreferencesAffichage() {
